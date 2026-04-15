@@ -63,7 +63,6 @@ export function useLogout() {
       navigate({ to: '/login' });
     },
     onError: () => {
-      // Even if server logout fails, clear local state
       logout();
       queryClient.clear();
       navigate({ to: '/login' });

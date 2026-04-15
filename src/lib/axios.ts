@@ -1,6 +1,6 @@
 import axios from 'axios';
 import createAuthRefreshInterceptor from 'axios-auth-refresh';
-import { useAuthStore } from '@/features/auth/stores/auth-store';
+import { authStore } from '@/features/auth';
 import { env } from '@/config/env';
 
 export const apiClient = axios.create({
@@ -14,7 +14,7 @@ export const apiClient = axios.create({
 // Request interceptor: Attach access token
 apiClient.interceptors.request.use(
   (config) => {
-    const { accessToken } = useAuthStore.getState();
+    const { accessToken } = authStore.getState();
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -27,23 +27,19 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message =
-      error.response?.data?.message || error.message || 'An unexpected error occurred';
-
-    return Promise.reject({
-      message,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
+    if (error.response?.data?.message) {
+      error.message = error.response.data.message;
+    }
+    return Promise.reject(error);
   },
 );
 
 // Auto-refresh on 401
 const refreshAuthLogic = async () => {
   try {
-    const { refreshToken } = useAuthStore.getState();
+    const { refreshToken } = authStore.getState();
     if (!refreshToken) {
-      useAuthStore.getState().logout();
+      authStore.getState().logout();
       throw new Error('No refresh token');
     }
 
@@ -52,11 +48,11 @@ const refreshAuthLogic = async () => {
     });
 
     const { accessToken, refreshToken: newRefreshToken } = response.data;
-    useAuthStore.getState().setTokens(accessToken, newRefreshToken);
+    authStore.getState().setTokens(accessToken, newRefreshToken);
 
     return Promise.resolve();
   } catch {
-    useAuthStore.getState().logout();
+    authStore.getState().logout();
     return Promise.reject();
   }
 };

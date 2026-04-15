@@ -1,4 +1,5 @@
-import { create } from 'zustand';
+import { createStore } from 'zustand/vanilla';
+import { useStore } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '@/features/auth/types';
 
@@ -14,7 +15,7 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
+export const authStore = createStore<AuthState>()(
   persist(
     (set) => ({
       user: null,
@@ -48,3 +49,9 @@ export const useAuthStore = create<AuthState>()(
     },
   ),
 );
+
+export function useAuthStore(): AuthState;
+export function useAuthStore<T>(selector: (state: AuthState) => T): T;
+export function useAuthStore<T>(selector?: (state: AuthState) => T) {
+  return useStore(authStore, selector as (state: AuthState) => T);
+}

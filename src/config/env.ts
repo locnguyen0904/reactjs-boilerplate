@@ -10,7 +10,12 @@ const envSchema = z.object({
 type Env = z.infer<typeof envSchema>;
 
 function validateEnv(): Env {
-  const parsed = envSchema.safeParse(import.meta.env);
+  const parsed = envSchema.safeParse({
+    VITE_API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+    VITE_APP_NAME: import.meta.env.VITE_APP_NAME,
+    VITE_APP_ENV: import.meta.env.VITE_APP_ENV,
+    VITE_TOKEN_REFRESH_THRESHOLD: import.meta.env.VITE_TOKEN_REFRESH_THRESHOLD,
+  });
 
   if (!parsed.success) {
     console.error('❌ Invalid environment variables:', z.flattenError(parsed.error).fieldErrors);
